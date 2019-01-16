@@ -1,0 +1,12 @@
+
+I developed this Python library to help run commonly used post-processing operations for CFD results from Jetstream, the in-house solver for the Computational Aerodynamics Research Group at the University of Toronto. We  use Tecplot to look at both surface data files and Plot3D results, so it made a lot of sense to script the creation of plots that we often need to create for papers. This library depends heavily on numpy and pytecplot. I did my best to make it work for both Python 2 and Python 3, please let me know if something is not working.
+
+Installation 
+  Install pytecplot: 'pip install --user pytecplot'
+ 
+Running
+  Source the run_ scripts depending on whether youre on oddjob (Linux) or your own Mac OS X. No windows support sorry.
+  'source run_macosx.sh'
+  Make a subdirectory in this python folder, and execute your script on this folder.
+
+
