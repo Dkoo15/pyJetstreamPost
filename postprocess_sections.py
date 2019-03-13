@@ -48,7 +48,7 @@ colors = [tecplot.constant.Color.Red,
 section_list = list()
 
 for i, surface in enumerate(files):
-    init_surface(folder + surface)
+    init_surface(folder+surface, box=wing.box)
     cpcf_sections(labels[i], span_stations, ('Cp', 'Cf'), section_list,
                   dihedral_stn)
 

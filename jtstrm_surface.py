@@ -56,12 +56,12 @@ def filter(box, activate=True):
     if box is None:
         return zonelist
 
-    xmin = box[0, 0]
-    xmax = box[1, 0]
-    ymin = box[0, 1]
-    ymax = box[1, 1]
-    zmin = box[0, 2]
-    zmax = box[1, 2]
+    xmin = box[0][0]
+    xmax = box[1][0]
+    ymin = box[0][1]
+    ymax = box[1][1]
+    zmin = box[0][2]
+    zmax = box[1][2]
     subzones = []
 
     for zone in zonelist:
@@ -71,7 +71,7 @@ def filter(box, activate=True):
                         zone.values('X').max() < xmax):
                         if (zone.values('Z').min() > zmin and
                                 zone.values('Z').max() < zmax):
-                                subzones.append(z)
+                                subzones.append(zone)
 
     if (activate):
         _, = tecplot.active_frame().active_zones(subzones)
@@ -97,10 +97,10 @@ def span():
     ymin = _dataset.variable('Y').min()
     ymax = _dataset.variable('Y').max()
     if ymax < 1e-6:  # Some files have negative span
-        tip = ymin + 0.001
+        tip = ymin + 0.05
         root = ymax + 0.05*tip
     else:
-        tip = ymax - 0.001
+        tip = ymax - 0.05
         root = ymin + 0.05*tip
 
     span = abs(tip-root)
@@ -146,11 +146,11 @@ def dihedral_section(y, variables=None, get_nodemap=False):
     gamma = np.arctan(abs(dz/dy))  # this is used later to rotate back
     origin = ((xm+xp)/2, y, (zm+zp)/2)  # origin of rotation
 
-    data.delete_zones([section_neg, section_pos])  # clean up
+    _dataset.delete_zones([section_neg, section_pos])  # clean up
 
-    af, nmap, cpcf, twst, gamm, chrd = cross_section(origin, normal, gamma,
-                                                     variables, get_nodemap)
-    return data, nmap, twst, gamm, chrd
+    af, nmap, twst, chrd, _, = cross_section(origin, normal, gamma,
+                                             variables, get_nodemap)
+    return af, nmap, twst, gamma, chrd
 
 
 def cross_section(origin, normal=(0, 1, 0), gamma=0.0,
@@ -335,7 +335,6 @@ def mirror():
     ''' Mirror surface on X-Y plane'''
     global _dataset
     for zone in _dataset.zones():
-        n = zone.num_points
         y = zone.values('Y').as_numpy_array()
         y = -1*y  # eflect the y axis
         zone.values('Y')[:] = y[:]

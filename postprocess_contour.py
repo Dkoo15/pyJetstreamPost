@@ -21,6 +21,7 @@ dataset = (tecplot.data.load_tecplot(
            filenames=folder + files[1],
            read_data_option=tecplot.constant.ReadDataOption.Append)
            )
+print('-> Loaded File: %s.' % (folder + files[1]))
 main = tecplot.active_frame()
 main.add_text(labels[0], (20, 90), size=14)
 main.add_text(labels[1], (70, 90), size=14)

@@ -65,7 +65,7 @@ def elliptical_lift(dataset, cl, span, npts=100, wing_offset=0.0):
     elliptical = dataset.add_ordered_zone(name='lift_elliptical',
                                           shape=(npts, 1, 1)
                                           )
-    elliptical.values('Fn')[:] = lift[:]/span
+    elliptical.values('Fn')[:] = lift[:]/abs(span)
     elliptical.values('y/b')[:] = y[:]
 
     return elliptical
@@ -80,7 +80,7 @@ colors = [tecplot.constant.Color.Red,
 section_list = []
 
 for i, surface in enumerate(files):
-    init_surface(folder + surface)
+    init_surface(folder + surface, box=wing.box)
     lift, span = force_sections(labels[i], section_list, cg)
 
 dataset = create_lift_dataset(section_list, labels)

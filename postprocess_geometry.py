@@ -76,7 +76,7 @@ section_list = []
 tc_locations = [0.15, 0.90]
 
 for i, surface in enumerate(files):
-    init_surface(folder + surface)
+    init_surface(folder + surface, box=wing.box)
     geometry_sections(labels[i], section_list, dihedral_stn=dihedral_stn)
 
 dataset = create_spanwise_dataset(section_list, labels, tc_locations)
