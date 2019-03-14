@@ -108,26 +108,67 @@ def extract_surface(boundary, variables):
     volzone = _dataset.zone(boundary.block)
     bface = boundary.face
     imax, jmax, kmax = volzone.dimensions
-    n = volzone.num_points
     nvar = len(variables)
-    m = imax*jmax
-    surfvar = np.zeros((m, nvar), dtype=np.float64)
 
-    if (bface == 5):  # Need transpose
-        for j, v in enumerate(variables):
+    if bface == 1:  # not correct for metrics, need transpose!
+        m = jmax*kmax
+        surfvar = np.zeros((m, nvar))
+        for n, v in enumerate(variables):
+            var = volzone.values(v).as_numpy_array()
+            surfvar[:, n] = var[0::imax]
+        imax = jmax
+        jmax = kmax
+
+    elif bface == 2:
+        m = jmax*kmax
+        surfvar = np.zeros((m, nvar))
+        for n, v in enumerate(variables):
+            var = volzone.values(v).as_numpy_array()
+            surfvar[:, n] = var[imax-1::imax]
+        imax = jmax
+        jmax = kmax
+
+    elif bface == 3:  # not correct for metrics, need transpose!
+        m = imax*kmax
+        surfvar = np.zeros((m, nvar))
+        for n, v in enumerate(variables):
+            var = volzone.values(v).as_numpy_array()
+            for k in range(kmax):
+                surfvar[k*imax:(k+1)*imax, n] = var[k*jmax*imax:(k*jmax+1)*imax]
+        jmax = kmax
+
+    elif bface == 4:
+        m = imax*kmax
+        surfvar = np.zeros((m, nvar))
+        for n, v in enumerate(variables):
+            var = volzone.values(v).as_numpy_array()
+            for k in range(kmax):
+                surfvar[k*imax:(k+1)*imax, n] = var[((k+1)*jmax-1)*imax:(k+1)*jmax*imax]
+        jmax = kmax
+
+    elif bface == 5:  # Transpose data for metric calculation
+        m = imax*jmax
+        surfvar = np.zeros((m, nvar), dtype=np.float64)
+        for n, v in enumerate(variables):
             var = volzone.values(v).as_numpy_array()
             for i in range(imax):
-                surfvar[i*jmax:(i+1)*jmax, j] = var[i:m:imax]
+                surfvar[i*jmax:(i+1)*jmax, n] = var[i:m:imax]
 
         tmp = jmax
         jmax = imax
         imax = tmp  # swap coordinates
 
-    else:  # bface==6:
-        for j, v in enumerate(variables):
-            surfvar[:, j] = volzone.values(v).as_numpy_array()[n-m:n]
+    elif bface==6:
+        m = imax*jmax
+        surfvar = np.zeros((m, nvar), dtype=np.float64)
+        for n, v in enumerate(variables):
+            var = volzone.values(v).as_numpy_array()
+            surfvar[:, n] = var[-m:]
+    else:
+        print("Error, incorrect bface!")
+        raise SystemExit
 
-    boundary.assign_data(imax, jmax, surfvar, j)
+    boundary.assign_data(imax, jmax, surfvar, nvar)
 
 
 def get_aero_surfaces(coordinates=('X', 'Y', 'Z'),
@@ -203,16 +244,10 @@ def compute_cpcf(boundary, re, mach):
     cfac = -2/(mach*mach)  # factor
 
     rho = volzone.values(3).as_numpy_array()
-    u = volzone.values(4).as_numpy_array()
-    v = volzone.values(5).as_numpy_array()
-    w = volzone.values(6).as_numpy_array()
+    u = volzone.values(4).as_numpy_array()/rho
+    v = volzone.values(5).as_numpy_array()/rho
+    w = volzone.values(6).as_numpy_array()/rho
     e = volzone.values(7).as_numpy_array()
-
-    for ind in [wallidx, wallidx-sgn*offset, wallidx-2*sgn*offset]:
-        # precompute u, v, w, for nodes we need only
-        u[ind:ind+offset] = u[ind:ind+offset]/rho[ind:ind+offset]
-        v[ind:ind+offset] = v[ind:ind+offset]/rho[ind:ind+offset]
-        w[ind:ind+offset] = w[ind:ind+offset]/rho[ind:ind+offset]
 
     v1 = np.zeros(3)
     v2 = np.zeros(3)
