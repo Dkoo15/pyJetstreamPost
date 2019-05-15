@@ -34,18 +34,20 @@ main.width = 10.
 
 main.plot().show_contour = True
 contour = main.plot().contour(0)
-contour.levels.reset_levels(np.linspace(-1, 1, 21))
+contour.levels.reset_levels(np.linspace(-1, 1, 41))
 for fmap in main.plot().fieldmaps():
     fmap.contour.contour_type = tecplot.constant.ContourType.Overlay
 legend = contour.legend
 legend.show = True
 legend.vertical = False
-legend.label_step = 2
+legend.label_step = 4
 legend.position = (95,  12)
 legend.header_font.size = 1.5
 legend.number_font.size = 1.5
 legend.box.box_type = tecplot.constant.TextBox.None_
 main.plot().view.fit()
+main.plot().use_lighting_effect = False
 main.plot().view.center()
 print('Exporting image: cp_contour.png ...')
 tecplot.export.save_png(folder+'cp_contour.png', IMGWIDTH)
+tecplot.export.save_ps(folder+'cp_contour.ps')
