@@ -16,40 +16,35 @@ from load_parameters import *
 '''
 
 
-def create_lift_dataset(extracted_section_list, labels):
+def create_lift_zones(dataset, section_list, labels, span):
     '''Create a tecplot dataset with the twist and thickness distribution
 
     Arguments:
-        extracted_section_list - (list of SectionData objects)
+        dataset - Tecplot Dataset
+        section_list - (list of SectionData objects)
         labels - (list of str)
     '''
 
-    new_dataset = tecplot.active_frame().create_dataset(
-                                                        'Spanwise lift',
-                                                        ['y/b', 'Fn'],
-                                                        True)
-
     for name in labels:
-        sub_section_list = [s for s in extracted_section_list
+        sub_section_list = [s for s in section_list
                             if s.label == name]
 
         n = len(sub_section_list)
-        yb = np.zeros(n)
+        y = np.zeros(n)
         lift = np.zeros(n)
 
         for i, section in enumerate(sub_section_list):
-            yb[i] = section.location
+            y[i] = section.location
             lift[i] = section.section_lift()
 
-        zone = new_dataset.add_ordered_zone(name=name, shape=(n, 1, 1))
-        zone.values('y/b')[:] = yb[:]
+        zone = dataset.add_ordered_zone(name=name, shape=(n, 1, 1))
+        zone.values('y/b')[:] = y[:]/span
         zone.values('Fn')[:] = lift[:]
 
-    return new_dataset
 
-
-def elliptical_lift(dataset, cl, span, npts=100, wing_offset=0.0):
+def elliptical_lift(dataset, cl, span, root, npts=100):
     lift = np.zeros(npts)
+    offset = root/span
     y = np.linspace(0, 1, npts)
     dy = 1/npts
 
@@ -60,9 +55,11 @@ def elliptical_lift(dataset, cl, span, npts=100, wing_offset=0.0):
     for i in range(npts):
         lift[i] = lroot*np.sqrt(1-(y[i])**2)
 
-    y = y*(1-wing_offset) + wing_offset
-
-    elliptical = dataset.add_ordered_zone(name='lift_elliptical',
+    indices = np.where(y > offset)
+    y = y[indices]
+    lift = lift[indices]
+    npts = len(y)
+    elliptical = dataset.add_ordered_zone(name='elliptical',
                                           shape=(npts, 1, 1)
                                           )
     elliptical.values('Fn')[:] = lift[:]/abs(span)
@@ -81,11 +78,17 @@ section_list = []
 
 for i, surface in enumerate(files):
     init_surface(folder + surface, box=wing.box)
-    lift, span = force_sections(labels[i], section_list, cg)
+    lift, stations = force_sections(labels[i], section_list, cg,
+                                    dihedral, winglet_y)
 
-dataset = create_lift_dataset(section_list, labels)
-elliptical_zone = elliptical_lift(dataset, lift, span)
+root = stations[0]
+span = stations[-1:]
 
+dataset = tecplot.active_frame().create_dataset('Spanwise lift',
+                                                ['y/b', 'Fn'],
+                                                True)
+
+create_lift_zones(dataset, section_list, labels, span)
 zonelist = list(dataset.zones())
 main = tecplot.active_frame()
 main.plot_type = tecplot.constant.PlotType.XYLine

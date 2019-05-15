@@ -107,7 +107,8 @@ def span():
     return tip, root, span
 
 
-def dihedral_section(y, variables=None, get_nodemap=False):
+def dihedral_section(y, dihedral=None, variables=None, get_nodemap=False,
+                     untwist=True):
     '''Compute a cross section with dihedral
 
     arguments:
@@ -148,8 +149,14 @@ def dihedral_section(y, variables=None, get_nodemap=False):
 
     _dataset.delete_zones([section_neg, section_pos])  # clean up
 
-    af, nmap, twst, chrd, _, = cross_section(origin, normal, gamma,
-                                             variables, get_nodemap)
+    if dihedral is not None:  # Override with given dihedral
+        gamma = dihedral*np.pi/180.0
+        normal = (0, np.cos(gamma), np.sin(gamma))
+
+    af, nmap, twst, gamma, chrd, = cross_section(origin, normal, gamma,
+                                                 variables, get_nodemap,
+                                                 untwist)
+
     return af, nmap, twst, gamma, chrd
 
 
@@ -169,11 +176,14 @@ def cross_section(origin, normal=(0, 1, 0), gamma=0.0,
        untwist - (boolean)
     '''
     global _dataset
-    section = (tecplot.data.extract.extract_slice(origin=origin,
-               normal=normal,
-               source=tecplot.constant.SliceSource.SurfaceZones,
-               dataset=_dataset)
-               )
+    try:
+        section = (tecplot.data.extract.extract_slice(origin=origin,
+                   normal=normal,
+                   source=tecplot.constant.SliceSource.SurfaceZones,
+                   dataset=_dataset)
+                   )
+    except (tecplot.exception.TecplotLogicError):
+        return None, None, 0.0, 0.0, 0.0
 
     x = section.values('X').as_numpy_array()
     z = section.values('Z').as_numpy_array()
@@ -191,7 +201,7 @@ def cross_section(origin, normal=(0, 1, 0), gamma=0.0,
 
     dx = xc[i] - xc[j]
     dz = zc[i] - zc[j]
-    chord = np.sqrt(dx*dx + dz*dx)  # compute and Scale by chord
+    chord = np.sqrt(dx*dx + dz*dz)  # compute and Scale by chord
     xc = xc/chord
     zc = zc/chord
     twist = np.arctan(dz/dx)  # compute Twist

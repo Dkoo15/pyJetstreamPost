@@ -19,7 +19,7 @@ for i, surface in enumerate(files):
 
     for comp in components:
         comp.zonelist = jtstrm_surface.filter(comp.box, False)
- 
+
     body = jtstrm_surface.excluded_component(components, new_name='Fuselage')
     if body is not None:
         components.append(body)
@@ -28,7 +28,7 @@ for i, surface in enumerate(files):
         comp.clear()
         _ = jtstrm_surface.surface_force(component=comp,
                                          force_variables=None, cg=cg)
-     
+
     aoa = jtstrm_surface.angle_of_attack()*np.pi/180
     lvec = np.array([-np.sin(aoa), 0, np.cos(aoa)])
     dvec = np.array([np.cos(aoa), 0, np.sin(aoa)])
@@ -74,8 +74,11 @@ for i, surface in enumerate(files):
                                               cy_breakdown/cy*100))
 
     print('== Drag Pressure/Friction Split ==')
-    cdpres = sum([c.pressure_force(dvec) for c in components])
-    cdfric = sum([c.friction_force(dvec) for c in components])
-    print('CD_pres \t= %.5f   (%5.2f%%)' % (cdpres/sref, cdpres/cd*100))
-    print('CD_fric \t= %.5f   (%5.2f%%)' % (cdfric/sref, cdfric/cd*100))
+    for c in components:
+        cdpres = c.pressure_force(dvec)
+        print('CD_pres_%s \t= %.5f   (%5.2f%%)' % (c.name, cdpres/sref, cdpres/cd*100))
+
+    for c in components:
+        cdfric = c.friction_force(dvec)
+        print('CD_fric_%s \t= %.5f   (%5.2f%%)' % (c.name, cdfric/sref, cdfric/cd*100))
     print('   ')
