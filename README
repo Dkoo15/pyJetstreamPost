@@ -3,18 +3,18 @@ I developed this Python library to help run commonly used post-processing operat
 
 Installation 
   Install virtualenv: 
-    >> pip install virtualenv
+    $ pip install virtualenv
 
   Create virtualenv in this directory: '
-    >> virtualenv -p PYTHON_PATH jetstream
+    $ virtualenv -p PYTHON_PATH jetstream
 
   Add Pytecplot binary path to virtualenv activate script, my example:
-    >> echo 'export DYLD_LIBRARY_PATH="/Applications/Tecplot 360 EX 2017 R3/Tecplot 360 EX 2017 R3.app/Contents/MacOS${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"' >> jetstream/bin/activate
+    $ echo 'export DYLD_LIBRARY_PATH="/Applications/Tecplot 360 EX 2017 R3/Tecplot 360 EX 2017 R3.app/Contents/MacOS${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"' >> jetstream/bin/activate
 
   Install required packages:
-    >> source jetstream/bin/activate
-    >> pip install numpy pytecplot
+    $ source jetstream/bin/activate
+    $ pip install numpy pytecplot
 
 Running
-  source jetstream/bin/activate
-  python <script.py>
+    $ source jetstream/bin/activate
+    $ python <script.py>
